@@ -1,0 +1,14 @@
+{
+  "name": "gamecore",
+  "version": "0.0.1",
+  "description": "Minecraft Node.js intergration",
+  "main": "kernel.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "M. Ferwerda",
+  "license": "ISC",
+  "dependencies": {
+    "modern-rcon": "^1.0.3"
+  }
+}
