@@ -3,8 +3,10 @@ var host = "192.168.178.29";
 var rconpassword = "lel";
 var rconport = 25575;
 
-var wave = 0;
-var maxzombies = 0;
+var G_wave = 0;
+var G_maxzombies = 0;
+var G_zombiesspawned = 0;
+var G_zombiespawnpoints = ["-1660 5 228", "-1640 5 236", "-1634 5 260"];
 
 function rconsend(command) {
     console.log("[>>] " + command);
@@ -22,32 +24,57 @@ function sendtitle(player, title, color = "white") {
     rconsend('title ' + player +' title ["",{"text":"' + title + '","' + color + '":"white","bold":true}]');
 }
 
-function playsound(sound, player, volume, pitch = "1") {
-    rconsend("playsound " + sound + " voice " + player + " ~ ~ ~ " + volume + " " + pitch);
+function playsound(sound, player, volume, pos = "~ ~ ~", pitch = "1") {
+    rconsend("playsound " + sound + " voice " + player + " " + pos + " " + volume + " " + pitch);
 }
 
 function StartGame() {
-    zombiespawnpoints = ["-1660 5 228", "-1640 5 236", "-1634 5 260"];
-    wave ++;
-    maxzombies = 10;
-    playsound("wavestart", "@a", "999999")
-    zombiesspawned = 0;
-    sendtitle("@a", "Wave: " + wave, "red");
-    var zombietimer = setInterval(function() { //ZombieSpawning
-            rconsend("summon minecraft:zombie " + zombiespawnpoints[Math.floor(Math.random() * zombiespawnpoints.length)]);
-            zombiesspawned ++;
-            console.log("spawned: " + zombiesspawned + " max: " + maxzombies)
-            if(zombiesspawned >= 10) {
-                clearInterval(zombietimer);
-                testforZombies();
-            }
-    }, 1000);
+    G_wave ++;
+    G_maxzombies = 10;
+    G_zombiesspawned = 0;
+    playsound("wavestart", "@a", "999999");
+    playsound("level", "@a", "999999");
+    var musiclooper = setInterval(function () {
+        playsound("level", "@a", "999999");
+    }, 60000);
+    sendtitle("@a", "Wave: " + G_wave, "red");
+    ZombieSpawnTimer(G_maxzombies, 3000)
+   
 }
 
 function nextwave() {
-    wave ++;
-    maxzombies = maxzombies * 2;
-    sendtitle("@a", "Wave: " + wave, "red");
+    playsound("waveend", "@a", "999999");
+    G_wave ++;
+    G_maxzombies = G_maxzombies * 2;
+    setTimeout(function() {
+        sendtitle("@a", "Wave: " + G_wave, "red");
+        playsound("wavestart", "@a", "999999");
+        ZombieSpawnTimer(G_maxzombies, 3000);
+    }, 9000);
+    
+}
+
+function StopGame() {
+    sendtitle("@a", "GameOver" + G_wave, "red");
+    playsound("gameover", "@a", "999999");
+    rconsend("kill @e[type=!player]");
+    clearInterval(zombietimer);
+    clearInterval(musiclooper);
+    G_maxzombies = 0;
+    G_zombiesspawned = 0;
+    G_wave = 0;
+}
+
+function ZombieSpawnTimer(maxzombies, spawninterval) {
+    var zombietimer = setInterval(function() { 
+            rconsend("summon minecraft:zombie " + G_zombiespawnpoints[Math.floor(Math.random() * G_zombiespawnpoints.length)]);
+            G_zombiesspawned ++;
+            console.log("Spawning zombie " + G_zombiesspawned + "/" + maxzombies + " interval: " + spawninterval + "ms.")
+            if(G_zombiesspawned >= maxzombies) {
+                clearInterval(zombietimer);
+                //testforZombies();
+            }
+    }, spawninterval);
 }
 
 function testforZombies() {
@@ -80,7 +107,11 @@ stdin.addListener("data", function(d) {
         rconsend("kill @e[type=!player]");
         StartGame();
     }
+    if (readline === "stop") {
+        StopGame();
+    }
     if (readline === "nxtwave") {
+        rconsend("kill @e[type=!player]");
         nextwave();
     }
     if (readline === "killz") {
