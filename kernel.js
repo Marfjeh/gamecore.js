@@ -9,12 +9,12 @@ var G_zombiesspawned = 0;
 var G_zombiespawnpoints = ["-1660 5 228", "-1640 5 236", "-1634 5 260"];
 
 function rconsend(command) {
-    console.log("[>>] " + command);
+    console.log("[>>] /" + command);
     const rconserver = new Rcon(host, rconport, rconpassword);
     rconserver.connect().then(() => {
         return rconserver.send(command);
     }).then(res => {
-        //console.log(res);
+        console.log("[<<] " + res);
     }).then(() => {
         return rconserver.disconnect();
     })
@@ -39,7 +39,6 @@ function StartGame() {
     }, 60000);
     sendtitle("@a", "Wave: " + G_wave, "red");
     ZombieSpawnTimer(G_maxzombies, 3000)
-   
 }
 
 function nextwave() {
@@ -77,11 +76,22 @@ function ZombieSpawnTimer(maxzombies, spawninterval) {
     }, spawninterval);
 }
 
-function testforZombies() {
+function testforZombies() { //oh my god.
     var testforzombie = setInterval(function() {
-        testf = rconsend("testfor @e[type=Zombie]");
-        console.log(testf);
-    }, 500 );
+            const rconserver = new Rcon(host, rconport, rconpassword);
+            rconserver.connect().then(() => {
+                return rconserver.send(command);
+            }).then(res => {
+                console.log("[<<] " + res);
+
+                if (res.contains.toLowercaser == "foundzombie") {
+                    nextwave();
+                }
+
+            }).then(() => {
+                return rconserver.disconnect();
+            })
+        }, 500 );
 }
 
 console.log("GameCore Ready.");
