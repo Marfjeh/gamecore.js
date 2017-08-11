@@ -6,7 +6,7 @@ var rconport = 25575;
 var G_wave = 0;
 var G_maxzombies = 0;
 var G_zombiesspawned = 0;
-var G_zombiespawnpoints = ["-1660 5 228", "-1640 5 236", "-1634 5 260"];
+var G_zombiespawnpoints = ["-1660 5 228", "-1640 5 236", "-1634 5 260", "-1684 4 259"];
 
 function rconsend(command) {
     console.log("[>>] /" + command);
@@ -21,7 +21,7 @@ function rconsend(command) {
 }
 
 function sendtitle(player, title, color = "white") {
-    rconsend('title ' + player +' title ["",{"text":"' + title + '","' + color + '":"white","bold":true}]');
+    rconsend('title ' + player +' title ["",{"text":"' + title + '","' + color + '":"white","bold":false}]');
 }
 
 function playsound(sound, player, volume, pos = "~ ~ ~", pitch = "1") {
@@ -29,6 +29,7 @@ function playsound(sound, player, volume, pos = "~ ~ ~", pitch = "1") {
 }
 
 function StartGame() {
+    rconsend("time set 18000");
     G_wave ++;
     G_maxzombies = 10;
     G_zombiesspawned = 0;
@@ -38,13 +39,14 @@ function StartGame() {
         playsound("level", "@a", "999999");
     }, 60000);
     sendtitle("@a", "Wave: " + G_wave, "red");
-    ZombieSpawnTimer(G_maxzombies, 3000)
+    ZombieSpawnTimer(G_maxzombies, 6000)
 }
 
 function nextwave() {
     playsound("waveend", "@a", "999999");
     G_wave ++;
-    G_maxzombies = G_maxzombies * 2;
+    G_zombiesspawned = 0;
+    G_maxzombies = G_maxzombies + 2;
     setTimeout(function() {
         sendtitle("@a", "Wave: " + G_wave, "red");
         playsound("wavestart", "@a", "999999");
@@ -71,7 +73,7 @@ function ZombieSpawnTimer(maxzombies, spawninterval) {
             console.log("Spawning zombie " + G_zombiesspawned + "/" + maxzombies + " interval: " + spawninterval + "ms.")
             if(G_zombiesspawned >= maxzombies) {
                 clearInterval(zombietimer);
-                //testforZombies();
+                testforZombies();
             }
     }, spawninterval);
 }
@@ -80,18 +82,17 @@ function testforZombies() { //oh my god.
     var testforzombie = setInterval(function() {
             const rconserver = new Rcon(host, rconport, rconpassword);
             rconserver.connect().then(() => {
-                return rconserver.send(command);
+                return rconserver.send("testfor @e[type=Zombie]");
             }).then(res => {
-                console.log("[<<] " + res);
-
-                if (res.contains.toLowercaser == "foundzombie") {
-                    nextwave();
-                }
-
+                if (res.includes("Found Zombie") === false)
+                    {
+                        nextwave();
+                        clearInterval(testforzombie);
+                    }
             }).then(() => {
                 return rconserver.disconnect();
             })
-        }, 500 );
+        }, 1000 );
 }
 
 console.log("GameCore Ready.");
