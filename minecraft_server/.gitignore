@@ -1,0 +1,16 @@
+#Thanks microsoft....
+.vs/
+
+#Minecraft jar. because its copyrighted and needs to be downloaded from the mojang server.
+*.jar
+
+logs/
+plugins/
+world_nether/
+world_the_end/
+banned-ips.json*
+banned-players.json*
+ops.json*
+usercache.json*
+wepif.yml*
+whitelist.json*

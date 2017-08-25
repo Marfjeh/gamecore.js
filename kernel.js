@@ -1,5 +1,20 @@
+/*
+*@author Marfjeh
+*/
+
+/*
+Todo: first: Rewrite this horrible mess Or make it less spagetti like. Or move away from nOdE.Js
+Idea: Load a .js or json file for a example a map, so that example you can load a diffrent map in the world,
+ have the right spawn points, and make it more modulear and use the kernel.js for only the main functions like rconsend sentitle etc.
+ so that the spawnpoints are not hardcoded. and the zombielimit is also changeable. and abbility to run more commands for example opening a door.
+
+ todo2: make a way to have C# like timers in node. I really dislike/hate the way how setinterval and settimeouts works. it makes my skin crawl.
+
+Idea2: Cutscenes.
+*/
+
 const Rcon = require('modern-rcon');
-var host = "192.168.178.29";
+var host = "127.0.0.1";
 var rconpassword = "lel";
 var rconport = 25575;
 
@@ -21,7 +36,7 @@ function rconsend(command) {
 }
 
 function sendtitle(player, title, color = "white") {
-    rconsend('title ' + player +' title ["",{"text":"' + title + '","' + color + '":"white","bold":false}]');
+    rconsend('title ' + player +' title ["",{"text":"' + title + '","color":"'+ color +'","bold":false}]');
 }
 
 function playsound(sound, player, volume, pos = "~ ~ ~", pitch = "1") {
@@ -33,11 +48,11 @@ function StartGame() {
     G_wave ++;
     G_maxzombies = 10;
     G_zombiesspawned = 0;
-    playsound("wavestart", "@a", "999999");
+    playsound("mwavestart", "@a", "999999");
     playsound("level", "@a", "999999");
     var musiclooper = setInterval(function () {
         playsound("level", "@a", "999999");
-    }, 60000);
+    }, 60000); //Change this in a function instead so that you can destroy the interval.
     sendtitle("@a", "Wave: " + G_wave, "red");
     ZombieSpawnTimer(G_maxzombies, 6000)
 }
@@ -49,24 +64,46 @@ function nextwave() {
     G_maxzombies = G_maxzombies + 2;
     setTimeout(function() {
         sendtitle("@a", "Wave: " + G_wave, "red");
-        playsound("wavestart", "@a", "999999");
+        playsound("mwavestart", "@a", "999999");
         ZombieSpawnTimer(G_maxzombies, 3000);
     }, 9000);
     
 }
 
+function RapidZombieWave(delay, maxzombies) {
+    playsound("waverapid", "@a", "99999");
+    //todo: Spawn a armor stand, and let it spreak randomly on the gamemap. 
+    rconsend("summon armo")
+}
+
+function Perk() {
+    
+}
+
+function TheBox() {
+
+}
+
+function mobofthedead() {
+    rconsend("tp @a -1742 4 235");
+    rconsend("gamemode 2");
+    playsound("mintro", "@a", "99999");
+    G_zombiespawnpoints = ["-1754 5 238", "-1754 5 251", "-1742 5 272", "-1733 5 269", "-1744 5 222"];
+    console.log("[i] Mob of the dead loaded.");
+    setTimeout(function() { StartGame(); }, 40000);
+}
+
 function StopGame() {
-    sendtitle("@a", "GameOver" + G_wave, "red");
+    sendtitle("@a", "GameOver", "red");
     playsound("gameover", "@a", "999999");
     rconsend("kill @e[type=!player]");
-    clearInterval(zombietimer);
-    clearInterval(musiclooper);
+    //clearInterval(musiclooper); //this doesnt work you blithering idiot!
     G_maxzombies = 0;
     G_zombiesspawned = 0;
     G_wave = 0;
 }
 
-function ZombieSpawnTimer(maxzombies, spawninterval) {
+function ZombieSpawnTimer(maxzombies, spawninterval, action) {
     var zombietimer = setInterval(function() { 
             rconsend("summon minecraft:zombie " + G_zombiespawnpoints[Math.floor(Math.random() * G_zombiespawnpoints.length)]);
             G_zombiesspawned ++;
@@ -78,7 +115,7 @@ function ZombieSpawnTimer(maxzombies, spawninterval) {
     }, spawninterval);
 }
 
-function testforZombies() { //oh my god.
+function testforZombies(action) { //oh my god.
     var testforzombie = setInterval(function() {
             const rconserver = new Rcon(host, rconport, rconpassword);
             rconserver.connect().then(() => {
@@ -95,8 +132,9 @@ function testforZombies() { //oh my god.
         }, 1000 );
 }
 
-console.log("GameCore Ready.");
+console.log("[i] GameCore Ready.");
 console.warn("[!] Default IP: " + host + ", Port: " + rconport + ", Password: " +  rconpassword)
+console.log("[i] [<<] = Response from server. [>>] = Send command/data to server.\nInternal Messages: [!] = Warning. [i] = Infromation. [X] = Error.\n---------------");
 
 const stdin = process.openStdin();
 stdin.addListener("data", function(d) {
@@ -106,29 +144,32 @@ stdin.addListener("data", function(d) {
         console.log("Set host to: [" + readline.substring(5)+ "]");
         host = readline.substring(5);
     }
-    if (readline.startsWith("pass")) {
+    else if (readline.startsWith("pass")) {
         console.log("Set pass to: [" + readline.substring(5)+ "]");
         rconpassword = readline.substring(5);
     }
-    if (readline.startsWith("port")) {
+    else if (readline.startsWith("port")) {
         console.log("Set port to [" + readline.substring(5) + "]");
         rconport = parseInt(readline.substring(5));
     }
-    if (readline === "start") {
+    else if (readline === "start") {
         rconsend("kill @e[type=!player]");
         StartGame();
     }
-    if (readline === "stop") {
+    else if (readline === "stop") {
         StopGame();
     }
-    if (readline === "nxtwave") {
+    else if (readline === "nxtwave") {
         rconsend("kill @e[type=!player]");
         nextwave();
     }
-    if (readline === "killz") {
+    else if (readline === "killz") {
        rconsend("kill @e[type=!player]");
     }
-    if (readline.startsWith("run")) {
-        console.log(rconsend(readline.substring(4)));
+    else if (readline === "m_dead") {
+       mobofthedead();
+     }
+    else{
+        console.log(rconsend(readline));
     }
 })
