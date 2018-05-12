@@ -1,0 +1,39 @@
+{
+  "wavestart": {
+    "sounds": [
+      "start"
+    ]
+  },
+  "waveend": {
+	"sounds": [
+		"end"
+	]
+  },
+    "gameover": {
+	"sounds": [
+		"gameover"
+	]
+  },
+    "mwavestart": {
+	"sounds": [
+		"mstart"
+	]
+  },
+    "mintro": {
+	"sounds": [{
+		"name":"mintro",
+		"stream": true
+	}]
+  },  
+   "box": {
+	"sounds": [
+		"box"
+	]
+  },  
+  "level": {
+	"sounds": [{
+		"name":"level",
+		"stream": true
+	}]
+  }
+}
